@@ -1,0 +1,441 @@
+/* LAYOUT */
+/* CSS here increases the document height and enables vertical-scroll.        */
+/* Users should be enticed to scroll downwards by showing the top-half of     */
+/* some intriguing content at the page-fold (#vrc-on-the-fold). Scrolling     */
+/* downwards makes mobile browsers enter fullscreen. For UX consistency,      */
+/* desktop browsers also entice the user to scroll down, though this will     */
+/* not trigger fullscreen mode - desktop users click a button instead.        */
+html {
+  height:     200%;         /* guarantee scroll-to-fullscreen on all mobiles  */
+  background: #808080;      /* mobile devices scroll beyond the screen’s end  */
+}
+.a-html {                         /* added to the <HTML> element by A-Frame   */
+  position:   absolute!important; /* override 'fixed'                         */
+  bottom:     auto!important;     /* override '0px'                           */
+}
+.a-body {                         /* added to the <BODY> element by A-Frame   */
+  overflow-y: scroll!important;   /* override 'overflow: hidden'              */
+}
+#vrc-scene-wrap {
+  position: fixed;
+  z-index: -9;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background-size: cover;
+  background-position: center center;
+}
+#vrc-scene-wrap-overlay {
+  position: fixed;
+  z-index: -8;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background: rgba(0,0,0,0.5);
+}
+
+
+/* SPLASH */
+/* This <DIV> covers the whole document when the page loads. If opaque, it    */
+/* completely obscures the A-Frame scene. If translucent/transparent, the     */
+/* scene can be viewed but not interacted with. The ‘scroll downwards to      */
+/* enter fullscreen’ is so important, we run `window.scrollTo(0, 0)` when the */
+/* window reloads.                                                            */
+#vrc-splash {
+  position:    absolute;
+  top:         0;
+  left:        0;
+  right:       0;
+  bottom:      0;
+  background:  linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.8) );
+  z-index:     90;
+  transition:  opacity 2s, visibility 0s 0s; /* appear, then fade-in          */
+}
+body.vrc-3d #vrc-splash {
+  opacity:     0;
+  visibility:  hidden;
+  transition:  opacity 2s, visibility 0s 2s; /* fade-out, then vanish         */
+}
+
+
+/* THE FOLD */
+/* Users should be enticed to scroll downwards by showing the top-half of */
+/* some intriguing content at the page-fold. VRC provides two elements    */
+/* to put this content in:                                                */
+/* - '#vrc-above-the-fold' a <DIV> whose bottom is stuck to the page-fold */
+/* - '#vrc-on-the-fold'       a <DIV> whose top is stuck to the page-fold */
+/* When the user scolls down ('.vrc-semi3d' added to <BODY>) these <DIV>s */
+/* vanish, and 3D fun begins!                                             */
+#vrc-above-the-fold {
+  position:    absolute;
+  height:      3000px; /* JS will set this to equal the viewport height   */
+  top:         0;
+  left:        0;
+  right:       0;
+  z-index:     91;
+  /*background:  rgba(255,0,80,0.5);*/
+  transition:  height 0.5s, opacity 2s, visibility 0s 0s;
+}
+#vrc-on-the-fold {
+  position:    absolute;
+  top:         3000px; /* JS will set this to equal the viewport height   */
+  left:        0;
+  right:       0;
+  text-align:  center;
+  transition:  top 0.5s, opacity 2s, visibility 0s 0s;
+}
+body.vrc-3d #vrc-above-the-fold,
+body.vrc-3d #vrc-on-the-fold {
+  opacity:     0;
+  visibility:  hidden;
+  transition:  opacity 2s, visibility 0s 2s;
+}
+#vrc-above-the-fold h1 {
+  text-align:  center;
+}
+#vrc-on-the-fold h1 {
+  margin:      -0.75em 0.5em 0.5em; /* the heading peeps above the fold   */
+}
+body.vrc-os- #vrc-on-the-fold {
+  top: 600px !important;
+}
+
+
+/* OVERLAY */
+.vrc-overlay {
+  position:    fixed;
+  right:       0;
+  bottom:      30px;  /* mobile must avoid taps near screen top or bottom */
+  opacity:     0;
+  visibility:  hidden;
+  transition:  opacity 1s, visibility 0s 1s;
+}
+body.vrc-not-native-vr.vrc-2d                     .vrc-2d-overlay,
+body.vrc-not-native-vr.vrc-semi3d                 .vrc-semi3d-overlay,
+body.vrc-not-native-vr.vrc-fs3d                   .vrc-fs3d-overlay,
+body.vrc-not-native-vr.vrc-fsvr                   .vrc-fsvr-overlay,
+body.vrc-has-native-vr.vrc-screen-isfs.vrc-2d     .vrc-2d-overlay,
+body.vrc-has-native-vr.vrc-screen-isfs.vrc-semi3d .vrc-semi3d-overlay,
+body.vrc-has-native-vr.vrc-screen-isfs.vrc-fs3d   .vrc-fs3d-overlay,
+body.vrc-has-native-vr.vrc-screen-isfs.vrc-fsvr   .vrc-fsvr-overlay {
+  opacity:     1;
+  visibility:  visible;
+  transition:  opacity 1s, visibility 0s 0s;
+}
+body.vrc-has-native-vr .vrc-not-native-vr,
+body.vrc-not-native-vr .vrc-has-native-vr {
+  display:     none; /* show according to device capabilities             */
+}
+
+body.vrc-os-and .vrc-semi3d-overlay,
+body.vrc-os-ios .vrc-semi3d-overlay {
+  display:     none; /* xx            */
+}
+body.vrc-os-and.vrc-screen-isl.vrc-screen-isfs.vrc-semi3d .vrc-has-native-vr.vrc-semi3d-overlay,
+body.vrc-os-ios.vrc-screen-isl.vrc-screen-isfs.vrc-semi3d .vrc-has-native-vr.vrc-semi3d-overlay {
+  display:     block; /* xx            */
+}
+
+
+/* BUTTONS */
+.vrc-button {
+  display: inline-block;
+  margin: 0 1em 0.5em 1em;
+  padding: 0.2em 0.3em;
+  background: rgba(0,80,200,0.7);
+  color: #99CCFF;
+  font-weight: normal;
+  border-radius: 0.1em;
+  cursor: pointer;
+  transition: color 0.5s, background 0.5s;
+}
+.vrc-button:hover,
+.vrc-button.vrc-active {
+  background: rgba(0,80,200,0.9);
+  color: white;
+  font-weight: bold;
+}
+.vrc-button.vrc-active {
+  cursor: default;
+}
+
+
+/* NAVIGATION */
+.vrc-navigation {
+  position: fixed;
+  left: 0;
+  right: 0;
+  font-size: 2em;
+}
+.vrc-has-native-vr .vrc-navigation {
+  top: 20%;
+}
+.vrc-not-native-vr .vrc-navigation {
+  top: 30%;
+}
+#vrc-previous,
+#vrc-next {
+  position: fixed;
+  top: 45%;
+  color: #B5BE00;
+  font-size: 10em;
+  transition: color 0.5s;
+  text-decoration: none;
+}
+#vrc-previous:hover,
+#vrc-next:hover {
+  color: #fff;
+}
+#vrc-previous {
+  left: 0.1em;
+}
+#vrc-next {
+  right: 0.1em;
+}
+body.vrc-fsvr .vrc-navigation,
+body.vrc-fsvr #vrc-above-the-fold,
+body.vrc-fsvr #vrc-splash {
+  display: none;
+}
+.vrc-dots {
+  position: absolute;
+  left: 3em;
+  right: 3em;
+  text-align: center;
+}
+
+/* COLOUR AND TYPOGRAPHY */
+body {
+  color:       #ffffff;
+  font-family: Arial, sans-serif;
+}
+h4 {
+  margin: 0;
+  color: #000;
+}
+
+
+/* MODES */
+a-scene {
+  opacity:     1;
+  visibility:  visible;
+  transition:  opacity 1s, visibility 0s 0s;
+}
+body.vrc-2d a-scene {
+  opacity:     0;
+  visibility:  hidden;
+  transition:  opacity 1s, visibility 0s 1s;
+}
+body.vrc-2d #here,
+body.vrc-2d #here-active {
+  display: none;
+}
+.vrc-2d-scene {
+  display: none;
+}
+body.vrc-2d .vrc-2d-scene {
+  display: block;
+}
+.vrc-2d-scene >div {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #333;
+}
+.vrc-slide,
+.vrc-article {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1s, visibility 0s 1s;
+}
+.vrc-slide.vrc-active,
+.vrc-article.vrc-active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1s, visibility 0s 0s;
+}
+.vrc-slide img {
+  width: 60%;
+  height: auto;
+}
+.vrc-article {
+  position: absolute;
+}
+.vrc-article p {
+  margin: 0 20%;
+}
+body.vrc-fsvr .vrc-article {
+  display: none;
+}
+
+
+
+body.vrc-cursor-hover canvas {
+  cursor: pointer!important;
+}
+
+.vrc-logo {
+  /*position: fixed;
+  left:        0;
+  right:       0;
+  text-align:  center;
+  z-index:     99;*/
+  font-size:   2.5em;
+}
+body.vrc-fsvr .vrc-logo {
+  display: none;
+}
+#vrc-debug {
+  display: none;
+}
+
+/* PORTRAIT MOBILE */
+/*
+body.vrc-os-and,
+body.vrc-os-ios {
+  transform: rotate(90deg);
+}
+body.vrc-os-and.vrc-screen-isl,
+body.vrc-os-ios.vrc-screen-isl {
+  transform: rotate(0);
+}
+*/
+
+
+/* Typography */
+body {
+  margin: 0;
+  color: #fff;
+  font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+  font-size: 62.5%; /* font-size 1em = 10px on default browser settings */
+}
+a {
+  color: #B5BE00;
+  transition: color 0.5s;
+  outline: none!important; /* Firefox */
+}
+a:hover {
+  color: #22d814;
+}
+h1, h2, h3, h4 {
+  color: #B5BE00;
+  font-weight: normal;
+  opacity: 0.8;
+}
+h1 { font-size: 3.0em; text-align: center; margin-bottom: 0; }
+h2 { font-size: 2.5em; text-align: center; }
+h3 { font-size: 2.0em; }
+h4 { font-size: 1.5em; margin-bottom: 0; }
+p  { font-size: 1.5em; opacity: 0.8; margin-top: 0.5em; }
+li { font-size: 1.2em; margin-bottom: 0.5em; }
+ul { margin-bottom: 2em; padding-left: 1.2em; }
+
+
+/* Utility */
+.vrc-hidden {
+  display: none!important;
+}
+
+
+/* Button */
+.vrc-button {
+  display: block;
+  text-align: center;
+}
+.vrc-button a {
+  display: inline-block;
+  background: #008466;
+  border-radius: 4px;
+  box-shadow: 0 0.2em 0.2em rgba(0, 0, 0, 0.6), inset 0 1em 1em rgba(255,255,255,0.4);
+  transition: background 0.5s;
+  padding: 0.3em 1em;
+  color: rgba(255,255,255,0.95) !important;
+  text-decoration: none;
+}
+.vrc-button a:hover {
+  background: #0dac00;
+  color: #fff!important;
+}
+
+
+/* Layout */
+#vrc-wrap,
+#vrc-main > div {
+  display: table;
+  width: 100%;
+}
+#vrc-wrap > div,
+#vrc-main > div > div {
+  display: table-row;
+}
+#vrc-wrap > div > div,
+#vrc-main > div > div > div {
+  display: table-cell;
+}
+#vrc-main {
+  width: 30em; /* mobile */
+}
+
+
+/* Header */
+#vrc-header >div {
+  padding-top: 2em;
+}
+
+
+/* Section */
+.vrc-section hr {
+  padding: 0 0 4em 0;
+  border-width: 0;
+  border-bottom: 2px solid #B5BE00;
+}
+.vrc-render img {
+  width: 100%;
+  height: auto;
+}
+
+
+/* Responsive */
+  #vrc-wrap { font-size: 1.4em;  }
+  #vrc-main { width:     42em;   }
+
+@media (min-width: 300px)  and (max-width: 399px)  { /* 100px */
+  #vrc-wrap { font-size: 1em;  }
+  #vrc-main { width:     19em;   }
+}
+@media (min-width: 400px)  and (max-width: 499px)  { /* 100px */
+  #vrc-wrap { font-size: 1.1em;  }
+  #vrc-main { width:     24em;   }
+}
+@media (min-width: 500px)  and (max-width: 599px)  { /* 100px */
+  #vrc-wrap { font-size: 1.2em;  }
+  #vrc-main { width:     30em;   }
+}
+@media (min-width: 600px)  and (max-width: 749px)  { /* 150px */
+  #vrc-wrap { font-size: 1.3em;  }
+  #vrc-main { width:     34em;   }
+}
+ @media (min-width: 750px)  and (max-width: 949px)  { /* 200px */
+  #vrc-wrap { font-size: 1.4em;  }
+  #vrc-main { width:     42em;   }
+}
+@media (min-width: 950px)  and (max-width: 1199px) { /* 250px */
+  #vrc-wrap { font-size: 1.5em;  }
+  #vrc-main { width:     52em;   }
+}
+@media (min-width: 1200px) and (max-width: 1499px) { /* 300px */
+  #vrc-wrap { font-size: 1.6em;  }
+  #vrc-main { width:     63em;   }
+}
+@media (min-width: 1500px) and (max-width: 1899px) { /* 400px */
+  #vrc-wrap { font-size: 1.7em;   }
+  #vrc-main { width:     75.25em; }
+}
+@media (min-width: 1900px) { /* fullscreen 1080P */
+  #vrc-wrap { font-size: 1.8em;   }
+  #vrc-main { width:     93em;   }
+}

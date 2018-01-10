@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VR Carousel</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi">
+
+  <script src="js/jquery-3.1.1.min.js"></script>
+  <script src="js/aframe.min.js"></script>
+  <script src="js/aframe-event-set-component.js"></script>
+  <script src="js/aframe-mouse-cursor-component.js"></script>
+  <script src="js/aframe-html-shader.min.js"></script>
+  <script src="js/aframe-look-at-billboard-component.min.js"></script>
+  <script>
+
+    //// A-Frame component to xx.
+    window.AFRAME.registerComponent('on-enter-semi3d-click', {
+      init: function () {
+        $(this.el)
+          .on('click', function () {
+            $(window).trigger('vrc-enter-semi3d');
+          })
+          .on('mouseenter', function () {
+            console.log(1)
+          })
+        ;
+      }
+    });
+
+    //// A-Frame component to xx.
+    window.AFRAME.registerComponent('on-shape-click', {
+      init: function () {
+        $(this.el)
+          .on('click', function () {
+            $( '#vrc-dot-' + this.parentNode.id.split('-').pop() ).click();
+          })
+          .on('mouseenter', function () {
+            VRC.unhoverAllEntities(); // remove hover-state from all entities
+            VRC.hoverEntity(this.parentNode); // add hover-state to the entity
+          })
+          .on('mouseleave', function () {
+            VRC.unhoverAllEntities(); // remove hover-state from all entities
+          })
+        ;
+      }
+    });
+
+  </script>
+
+  <style>
+
+    /* LAYOUT */
+    /* CSS here increases the document height and enables vertical-scroll.    */
+    /* Users should be enticed to scroll downwards by showing the top-half of */
+    /* some intriguing content at the page-fold (#vrc-on-the-fold). Scrolling */
+    /* downwards makes mobile browsers enter fullscreen. For UX consistency,  */
+    /* desktop browsers also entice the user to scroll down, though this will */
+    /* not trigger fullscreen mode - desktop users click a button instead.    */
+    html {
+      height:     200%;     /* guarantee scroll-to-fullscreen on all mobiles  */
+      background: #333444;  /* mobile devices scroll beyond the screen’s end  */
+    }
+    .a-html {               /* A-Frame adds this to the <HTML> element        */
+      position:   absolute; /* override 'fixed'                               */
+      bottom:     auto;     /* override '0px'                                 */
+    }
+    .a-body {               /* A-Frame adds this to the <BODY> element        */
+      overflow-y: scroll;   /* override 'overflow: hidden'                    */
+    }
+    #vrc-scene-wrap {
+      position: fixed;
+    }
+
+
+    /* SPLASH */
+    /* This <DIV> covers the whole document when the page loads. If opaque,   */
+    /* it completely obscures the A-Frame scene. If translucent/transparent,  */
+    /* the scene can be viewed but not interacted with. When the user scolls  */
+    /* down ('.vrc-semi3d' added to <BODY>) it vanishes, and 3D fun begins!   */
+    /* The ‘scroll downwards to enter fullscreen’ is so important, we run     */
+    /* `window.scrollTo(0, 0);` when the window reloads. */
+    #vrc-splash {
+      position:    absolute;
+      top:         0;
+      left:        0;
+      right:       0;
+      bottom:      0;
+      background:  linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.8) );
+      transition:  opacity 2s, visibility 0s 0s; /* appear, then fade-in      */
+    }
+    body.vrc-3d #vrc-splash {
+      opacity:     0;
+      visibility:  hidden;
+      transition:  opacity 2s, visibility 0s 2s; /* fade-out, then vanish     */
+    }
+
+
+    /* THE FOLD */
+    /* Users should be enticed to scroll downwards by showing the top-half of */
+    /* some intriguing content at the page-fold. VRC provides two elements    */
+    /* to put this content in:                                                */
+    /* - '#vrc-above-the-fold' a <DIV> whose bottom is stuck to the page-fold */
+    /* - '#vrc-on-the-fold'       a <DIV> whose top is stuck to the page-fold */
+    /* When the user scolls down ('.vrc-semi3d' added to <BODY>) these <DIV>s */
+    /* vanish, and 3D fun begins!                                             */
+    #vrc-above-the-fold {
+      position:    absolute;
+      height:      3000px; /* JS will set this to equal the viewport height   */
+      top:         0;
+      left:        0;
+      right:       0;
+      /*background:  rgba(255,0,80,0.5);*/
+      transition:  height 0.5s, opacity 2s, visibility 0s 0s;
+    }
+    #vrc-on-the-fold {
+      position:    absolute;
+      top:         3000px; /* JS will set this to equal the viewport height   */
+      left:        0;
+      right:       0;
+      text-align:  center;
+      transition:  top 0.5s, opacity 2s, visibility 0s 0s;
+    }
+    body.vrc-3d #vrc-above-the-fold,
+    body.vrc-3d #vrc-on-the-fold {
+      opacity:     0;
+      visibility:  hidden;
+      transition:  opacity 2s, visibility 0s 2s;
+    }
+    #vrc-above-the-fold h1 {
+      text-align:  center;
+    }
+    #vrc-on-the-fold h1 {
+      margin:      -0.75em 0.5em 0.5em; /* the heading peeps above the fold   */
+    }
+    body.vrc-os- #vrc-on-the-fold {
+      top: 530px !important;
+    }
+
+
+
+    #vrc-headline-inactive {
+        height: 0px!important;
+    }
+
+    /* OVERLAY */
+    .vrc-overlay {
+      position:    fixed;
+      right:       0;
+      bottom:      30px; /* mobile must avoid taps near screen top or bottom */
+      opacity:     0;
+      visibility:  hidden;
+      transition:  opacity 1s, visibility 0s 1s;
+    }
+    body.vrc-not-native-vr.vrc-2d                     .vrc-2d-overlay,
+    body.vrc-not-native-vr.vrc-semi3d                 .vrc-semi3d-overlay,
+    body.vrc-not-native-vr.vrc-fs3d                   .vrc-fs3d-overlay,
+    body.vrc-not-native-vr.vrc-fsvr                   .vrc-fsvr-overlay,
+    body.vrc-has-native-vr.vrc-screen-isfs.vrc-2d     .vrc-2d-overlay,
+    body.vrc-has-native-vr.vrc-screen-isfs.vrc-semi3d .vrc-semi3d-overlay,
+    body.vrc-has-native-vr.vrc-screen-isfs.vrc-fs3d   .vrc-fs3d-overlay,
+    body.vrc-has-native-vr.vrc-screen-isfs.vrc-fsvr   .vrc-fsvr-overlay {
+      opacity:     1;
+      visibility:  visible;
+      transition:  opacity 1s, visibility 0s 0s;
+    }
+    body.vrc-has-native-vr .vrc-not-native-vr,
+    body.vrc-not-native-vr .vrc-has-native-vr {
+      display:     none; /* show according to device capabilities             */
+    }
+
+    body.vrc-os-and .vrc-semi3d-overlay,
+    body.vrc-os-ios .vrc-semi3d-overlay {
+      display:     none; /* xx            */
+    }
+    body.vrc-os-and.vrc-screen-isl.vrc-screen-isfs.vrc-semi3d .vrc-has-native-vr.vrc-semi3d-overlay,
+    body.vrc-os-ios.vrc-screen-isl.vrc-screen-isfs.vrc-semi3d .vrc-has-native-vr.vrc-semi3d-overlay {
+      display:     block; /* xx            */
+    }
+
+
+    /* BUTTONS */
+    .vrc-button {
+      display: inline-block;
+      margin: 0 1em 0.5em 1em;
+      padding: 0.2em 0.3em;
+      background: rgba(0,80,200,0.7);
+      color: #99CCFF;
+      font-weight: normal;
+      border-radius: 0.1em;
+      cursor: pointer;
+      transition: color 0.5s, background 0.5s;
+    }
+    .vrc-button:hover,
+    .vrc-button.vrc-active {
+      background: rgba(0,80,200,0.9);
+      color: white;
+      font-weight: bold;
+    }
+    .vrc-button.vrc-active {
+      cursor: default;
+    }
+
+
+    /* NAVIGATION */
+    .vrc-navigation {
+      position: fixed;
+      left: 0;
+      right: 0;
+      font-size: 2em;
+    }
+    .vrc-has-native-vr .vrc-navigation {
+      top: 35%;
+    }
+    .vrc-not-native-vr .vrc-navigation {
+      top: 45%;
+    }
+    .vrc-previous {
+      float: left;
+    }
+    .vrc-next {
+      float: right;
+    }
+    body.vrc-fsvr .vrc-navigation,
+    body.vrc-fsvr #vrc-above-the-fold,
+    body.vrc-fsvr #vrc-splash {
+      display: none;
+    }
+    .vrc-dots {
+      position: absolute;
+      margin-top: -5em;
+      left: 3em;
+      right: 3em;
+      text-align: center;
+    }
+    .vrc-dot {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      margin: 0 1em;
+      border-radius: 1em;
+      border: 4px solid #fff;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.4s, background-color 0.4s;
+    }
+    .vrc-dot:hover {
+      opacity: 1;
+    }
+    .vrc-dot.vrc-active {
+      background: #fff;
+    }
+
+    /* COLOUR AND TYPOGRAPHY */
+    body {
+      color:       #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    h4 {
+      margin: 0;
+      color: #000;
+    }
+
+
+    /* MODES */
+    a-scene {
+      opacity:     1;
+      visibility:  visible;
+      transition:  opacity 1s, visibility 0s 0s;
+    }
+    body.vrc-2d a-scene {
+      opacity:     0;
+      visibility:  hidden;
+      transition:  opacity 1s, visibility 0s 1s;
+    }
+    body.vrc-2d #here,
+    body.vrc-2d #here-active {
+      display: none;
+    }
+    /*#here h1,
+    #here-active h1 {
+      display: none!important;
+    }
+    body.vrc-fs3d #here h1,
+    body.vrc-fs3d #here-active h1,
+    body.vrc-fsvr #here h1,
+    body.vrc-fsvr #here-active h1 {
+      display: inline-block!important;
+    }*/
+    .vrc-2d-scene {
+      display: none;
+    }
+    body.vrc-2d .vrc-2d-scene {
+      display: block;
+    }
+    .vrc-2d-scene >div {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: #333;
+    }
+    .vrc-slide,
+    .vrc-article {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 1s, visibility 0s 1s;
+    }
+    .vrc-slide.vrc-active,
+    .vrc-article.vrc-active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 1s, visibility 0s 0s;
+    }
+    .vrc-slide img {
+      width: 60%;
+      height: auto;
+      margin-top: 80px;
+    }
+    .vrc-article {
+      position: absolute;
+    }
+    .vrc-article p {
+      font-size: 1.4em;
+      margin-left: 20%;
+      margin-right: 20%;
+    }
+    body.vrc-fsvr .vrc-article {
+      display: none;
+    }
+
+
+
+    body.vrc-cursor-hover canvas {
+      cursor: pointer!important;
+    }
+
+    .vrc-logo {
+      /*position: fixed;
+      left:        0;
+      right:       0;
+      text-align:  center;
+      z-index:     99;*/
+      font-size:   2.5em;
+    }
+    body.vrc-fsvr .vrc-logo {
+      display: none;
+    }
+    #vrc-debug {
+      display: none;
+    }
+
+    /* PORTRAIT MOBILE */
+    /*
+    body.vrc-os-and,
+    body.vrc-os-ios {
+      transform: rotate(90deg);
+    }
+    body.vrc-os-and.vrc-screen-isl,
+    body.vrc-os-ios.vrc-screen-isl {
+      transform: rotate(0);
+    }
+    */
+
+
+  </style>
+</head>
+<body>
+
+  <div id="vrc-scene-wrap">
+    <a-scene id="vrc-scene" vr-mode-ui="enabled:false">
+
+      <a-entity id="camera" mouse-cursor
+                camera wasd-controls="enabled:true" look-controls="enabled:true"
+                position="0 1.3 4.5" rotation="-20 0 0">
+        <a-entity id="fuse"
+                  position="0 0 -.6"
+                  geometry="primitive:ring; radiusInner:0.015; radiusOuter:0.025; segmentsTheta:16"
+                  visible="false"
+                  material="color:#000; shader:flat">
+          <!-- <a-animation begin="click" easing="ease-in" attribute="scale"
+                       fill="backwards" from="0.2 0.2 0.2" to="1 1 1"></a-animation>
+          <a-animation begin="cursor-fusing" easing="ease-in" attribute="scale"
+                       fill="forwards" from="1 1 1" to="0.2 0.2 0.2"></a-animation> -->
+        </a-entity>
+      </a-entity><!-- #camera (look-controls may be enabled by the user) -->
+
+      <a-entity id="vrc-floor"
+                event-set__1="_event: mouseenter;"
+                event-set__2="_event: mouseleave;"
+                geometry="primitive:plane; width:3; height:3;"
+                position="0 0 2.5" rotation="-90 45 0"
+                material="color:#4A403C">
+      </a-entity><!-- #vrc-floor -->
+
+      <a-entity id="vrc-plane" class="vrc-visible-fs3d vrc-visible-fsvr"
+                on-enter-semi3d-click
+                visible="false"
+                event-set__1="_event: mouseenter;"
+                event-set__2="_event: mouseleave;"
+                event-set__3="_event: click;"
+                geometry="primitive:plane; width:0.9; height:0.15;"
+                position="1 0.5 3.5" rotation="0 0 0"
+                material="shader:html;target:#here;transparent:true;fps:0;">
+      </a-entity><!-- #vrc-plane -->
+
+      <!--<a-entity id="vrc-headline" class="vrc-visible-fs3d vrc-visible-fsvr"
+                billboard
+                visible="false"
+                event-set__1="_event: mouseenter;"
+                event-set__2="_event: mouseleave;"
+                event-set__3="_event: click;"
+                geometry="primitive:plane; width:1; height:0.25;"
+                position="0 1.2 3.5" rotation="0 0 0"
+                material="shader:html;target:#vrc-headline-inactive;transparent:true;fps:0;">
+      </a-entity>--><!-- #vrc-plane -->
+
+      <a-entity id="vrc-shape-1" class="vrc-shape"
+        position="1 0.5 2.7" rotation="0 20 0" scale="0.4 0.4 0.4">
+        <a-entity
+           collada-model="url(dae/top-of-the-crop.dae)">
+        </a-entity>
+        <a-entity
+          on-shape-click
+          position="-0.05 0.75 -0.05" scale="1.35 1 1.2"
+          geometry="primitive:sphere; radius:1"
+          material="color:red;opacity:0">
+        </a-entity>
+      </a-entity><!-- #vrc-shape-1 -->
+
+      <a-entity id="vrc-shape-0" class="vrc-shape"
+        position="0 0.65 3.5" rotation="0 -45 0" scale="0.5 0.5 0.5">
+        <a-entity
+           collada-model="url(dae/construction-simulator.dae)">
+        </a-entity>
+        <a-entity
+          on-shape-click
+          event-set__1="_event: mouseenter;"
+          event-set__2="_event: mouseleave;"
+          position="0.02 0.48 0" scale="0.9 0.6 0.7"
+          geometry="primitive:sphere; radius:1"
+          material="color:red;opacity:0">
+        </a-entity>
+        <a-entity
+          on-shape-click
+          position="0.4 1.25 -0.05" scale="0.65 0.4 0.5"
+          geometry="primitive:sphere; radius:1"
+          material="color:red;opacity:0">
+        </a-entity>
+      </a-entity><!-- #vrc-shape-0 -->
+
+      <a-entity id="vrc-shape-2" class="vrc-shape"
+                position="-1 0.8 2.65" rotation="0 -20 0" scale="0.4 0.4 0.4">
+        <a-entity
+          on-shape-click
+          position="0 0.3 0" scale="1.2 0.7 1.2"
+          geometry="primitive:sphere; radius:1"
+          material="color:red;opacity:0">
+        </a-entity>
+        <a-entity
+          on-shape-click
+          position="0 -0.5 0.5" scale="0.5 0.7 0.4"
+          geometry="primitive:sphere; radius:1"
+          material="color:red;opacity:0">
+        </a-entity>
+        <a-entity
+           collada-model="url(dae/reactor-builder.dae)">
+        </a-entity>
+      </a-entity><!-- #vrc-shape-2-->
+
+      <a-sky color="#333444"></a-sky>
+
+    </a-scene>
+  </div><!-- #vrc-scene-wrap -->
+
+
+
+  <div class="vrc-2d-scene">
+    <div id="vrc-slide-0" class="vrc-slide vrc-active"><img src="img/vr-carousel-test-4-screnngrab-0.png"></div>
+    <div id="vrc-slide-1" class="vrc-slide"><img src="img/vr-carousel-test-4-screnngrab-1.png"></div>
+    <div id="vrc-slide-2" class="vrc-slide"><img src="img/vr-carousel-test-4-screnngrab-2.png"></div>
+  </div>
+
+  <div id="vrc-splash">
+    <h1>&nbsp;</h1>
+  </div>
+
+  <div id="vrc-above-the-fold">
+    <h1 class="vrc-logo">VR Carousel</h1>
+  </div>
+
+  <div id="vrc-on-the-fold">
+
+    <div class="vrc-dots">
+      <div id="vrc-dot-2" class="vrc-dot">&nbsp;</div>
+      <div id="vrc-dot-0" class="vrc-dot vrc-active">&nbsp;</div>
+      <div id="vrc-dot-1" class="vrc-dot">&nbsp;</div>
+    </div>
+
+    <div id="vrc-article-0" class="vrc-article vrc-active">
+      <h1>Fred the Duck</h1>
+      <p>Once upon a time, a lovely yellow duck named Fred was bouncing
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur.
+      </p>
+      <p>Nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.
+      </p>
+    </div>
+
+    <div id="vrc-article-1" class="vrc-article">
+      <h1>The Blue Teapot</h1>
+      <p>Suddenly a blue teapot appeared! But there was no tea … “We need to get
+        a brew on” nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.
+      </p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur.
+      </p>
+    </div>
+
+    <div id="vrc-article-2" class="vrc-article">
+      <h1>The Low-Poly Monkey</h1>
+      <p>“I prefer coffee anyway” said the low-poly monkey.
+        Ut enim ad minim exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.
+      </p>
+      <p>Laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.
+      </p>
+    </div>
+
+  </div>
+
+  <div id="vrc-debug" style="position:fixed; left:10px;">
+    <h4 id="percentageToFold">...</h4>
+    <h4 id="getOrientation">...</h4>
+    <h4 id="getViewportWidth">...</h4>
+    <h4 id="getViewportHeight">...</h4>
+    <h4 id="screenWidth">...</h4>
+    <h4 id="screenHeight">...</h4>
+    <h4 id="isFullScreen">...</h4>
+  </div>
+
+
+  <!-- Carousel navigation. -->
+  <div class="vrc-navigation">
+    <div class="vrc-button vrc-previous">&lt;</div>
+    <div class="vrc-button vrc-next">&gt;</div>
+  </div>
+
+
+  <!-- Overlays on an old-school 2D layout. -->
+  <div class="vrc-overlay vrc-2d-overlay vrc-has-native-vr">
+    <h1 class="vrc-button vrc-enter-semi3d" alt="Enter 3D Mode">3D (mob)</h1>
+  </div>
+
+  <div class="vrc-overlay vrc-2d-overlay vrc-not-native-vr">
+    <h1 class="vrc-button vrc-enter-semi3d" alt="Enter 3D Mode">3D</h1>
+  </div>
+
+
+  <!-- Overlays rendered as a regular HTML element, in front of the scene. -->
+  <div class="vrc-overlay vrc-semi3d-overlay vrc-has-native-vr"><!-- hasNativeWebVRImplementation or `AFRAME.utils.isMobile()` -->
+    <h1 class="vrc-button vrc-enter-2d" alt="Enter 2D Mode">2D</h1><br>
+    <h1 class="vrc-button vrc-enter-fsvr" alt="Enter VR Mode">VR</h1>
+  </div>
+
+  <div class="vrc-overlay vrc-semi3d-overlay vrc-not-native-vr"><!-- eg desktop browser with no headset -->
+    <h1 class="vrc-button vrc-enter-2d" alt="Enter 2D Mode">2D</h1><br>
+    <h1 class="vrc-button vrc-enter-fs3d" alt="Enter Fullscreen 3D Mode">FS</h1>
+  </div>
+
+
+  <!-- Overlays rendered onto an A-Frame entity, as part of the 3D scene. -->
+  <div class="vrc-overlay vrc-fsvr-overlay vrc-has-native-vr">
+    <!-- <h1 class="vrc-button vrc-enter-semi3d" alt="Exit VR Mode">&times; (mob)</h1> -->
+  </div>
+
+  <div class="vrc-overlay vrc-fs3d-overlay vrc-not-native-vr">
+  </div>
+
+  <div id="here" style="position:absolute;z-index:-1;width:300px;height:50px;" class="vrc-enter-semi3d" alt="Exit Fullscreen 3D Mode">
+    <h1 class="vrc-button">Exit VR</h1>
+  </div>
+  <div id="here-active" style="position:absolute;z-index:-2;width:300px;height:50px;" class="vrc-enter-semi3d" alt="Exit Fullscreen 3D Mode">
+    <h1 class="vrc-button vrc-active">Exit VR</h1>
+  </div>
+  <div id="vrc-headline-inactive" style="position:absolute;z-index:-3;width:400px;height:100px;background:rgba(0,0,0,0.5)">
+    <h1>&nbsp;<!--Fred the Duck--></h1>
+  </div>
+
+  <script>
+
+    //// VRC’S PUBLIC API
+    window.VRC = {
+
+      //// Config
+      anim: {
+        slow: 1000
+       ,fast:  500
+      }
+     ,viewpoints: [
+        { position: "0 1.3 4.5", rotation: "-20 0 0" }
+       ,{ position: "1.5 1 3.5", rotation: "-20 30 0" }
+       ,{ position: "-1.5 1 3.5", rotation: "-20 -30 0" }
+      ]
+     ,viewpoint: 0   // index of the current camera position and rotation
+
+      //// Browser
+     ,ua:      ''    // user-agent, eg 'Op' for Opera
+     ,isOp:    false // Opera
+     ,isCr:    false // Chrome
+
+      //// Platform
+     ,os:      ''    // operating system, eg 'And' for Android
+     ,isiOS:   false // iOS (iPhone, iPad, etc)
+     ,isAnd:   false // Android
+
+      //// Capabilities
+     ,hasNativeVR: false // true for mobile UAs, and UAs with headset support
+
+      //// Initialization and Animation
+     ,mode:         'semi3d' // can also be '2d', 'fs3d' or 'fsvr'
+     ,isReady:      false    // prevents VRC event-triggering during init
+     ,isAnimating:  false    // prevents some behaviors during jQuery animations
+     ,cameraTravel: 0        // y-offset applied to camera due to page scroll
+     ,onAnimateEnd: function () {
+        window.VRC.isAnimating = false;
+      }
+
+      //// Shapes and Billboards
+     ,shapes: {        // hover-cursor  inactive-material         hover-material
+        'vrc-floor':   [ 'default',    'color:#4A403C',          'color:#4A403C' ]
+       ,'vrc-shape-0': [ 'pointer',    'color:hsl(120,50%,45%)', 'color:hsl(120,80%,80%)' ]
+       ,'vrc-shape-1': [ 'pointer',    'color:hsl(240,50%,45%)', 'color:hsl(240,80%,80%)' ]
+       ,'vrc-shape-2': [ 'pointer',    'color:hsl(  0,50%,45%)', 'color:hsl(  0,80%,80%)' ]
+      }
+     ,billboards: {    // hover-cursor  inactive-target           active-target
+        'vrc-headline':[ 'default',    '#vrc-headline-inactive', '#vrc-headline-active' ]
+       ,'vrc-plane':   [ 'pointer',    '#here',                  '#here-active;' ]
+      }
+     ,currentHover: null // changed to the ID of the currently-hovered shape or billboard
+
+      //// Screen and Window
+     ,screen: {      // set by `updateScreenWH()`
+        w:    null
+       ,h:    null
+       ,isL:  'init' // true if the device’s screen is currently landscape
+       ,isFS: 'init' // true if the device is currently in fullscreen mode
+      }
+     ,window: {      // set by `updateWindowWH()`
+        w:    null
+       ,h:    null
+      }
+
+      //// `onScroll()` - called when window scrolls up or down.
+     ,throttleScroll: false // prevents `onScroll()` running too frequently
+     ,onScroll: function () {
+        var W = window, VRC = W.VRC;
+
+        //// Prevent `onScroll()` being called more than 10 times a second.
+        if (VRC.throttleScroll) return;
+        VRC.throttleScroll = true;
+
+        //// A 100ms delay does the throttling.
+        W.setTimeout( function () {
+          VRC.throttleScroll = false;
+          var cameraTravel = 0;
+          if (VRC.window.h && W.scrollY) cameraTravel = W.scrollY/VRC.window.h;
+          var p = VRC.viewpoints[VRC.viewpoint].position.split(' '); // [1,2,3]
+          $('#camera').attr('position', p[0]+' '+(p[1]-cameraTravel)+' '+p[2]);
+          VRC.cameraTravel = cameraTravel;
+        });
+
+      }
+
+      //// `onResize()` - called when window size or device orientation changes.
+     ,throttleResize: false // prevents `onResize()` running too frequently
+     ,onResize: function () {
+        var W = window, VRC = W.VRC;
+
+        //// Prevent `onResize()` being called more than 10 times a second. This
+        //// mostly happens when a user drags the corner of the browser window.
+        if (VRC.throttleResize) return;
+        VRC.throttleResize = true;
+
+        //// A 100ms delay does the throttling, and also fixes a Chrome mobile
+        //// bug (old screen dimensions immediately after 'orientationchange').
+        W.setTimeout( function () {
+          VRC.throttleResize = false;
+
+          //// Update `VRC.screen` and `VRC.window`.
+          VRC.updateScreenWH();
+          VRC.updateWindowWH();
+
+          //// Determine whether the resize has begun or ended fullscreen mode.
+          var fullScreenNow = (
+              (0.93 < VRC.window.h / VRC.screen.h)
+          //  && (VRC.window.w === VRC.screen.w) //@todo enable width-test too?
+           //@todo check that window outer X and Y positions are zero
+           //@todo check that window outer top/bottom touch screen top/bottom
+          );
+
+          //// Update `VRC.screen.isFS`, add or remove 'body.vrc-screen-isfs'
+          //// and possibly trigger an 'vrc-enter/exit-screen-isfs' event.
+          if (fullScreenNow) {
+            if (! VRC.screen.isFS) VRC.onEnterFullscreen();
+          } else {
+            if (VRC.screen.isFS)   VRC.onExitFullscreen();
+          }
+
+          $('#vrc-above-the-fold').css('height', VRC.window.h);
+          $('#vrc-on-the-fold').css('top', VRC.window.h);
+
+          $('#getOrientation').html('VRC.screen.isL: ' + VRC.screen.isL);
+          $('#getViewportWidth').html( 'VRC.window.w: ' + VRC.window.w );
+          $('#getViewportHeight').html('VRC.window.h: ' + VRC.window.h );
+          $('#screenWidth').html( 'VRC.screen.w: ' + VRC.screen.w);
+          $('#screenHeight').html('VRC.screen.h: ' + VRC.screen.h);
+          $('#isFullScreen').html('VRC.screen.isFS: ' + VRC.screen.isFS);
+
+          //// After `onResize()` has been called once, we’re ready to begin!
+          if (! VRC.isReady) {
+            VRC.isReady = true;
+            $('body').addClass('vrc-ready');
+            $(W).trigger('vrc-ready');
+          }
+
+        }, 100);
+      } // end `onResize()`
+
+
+      //// `updateScreenWH()` - updates screen orientation and dimensions.
+     ,updateScreenWH: function () {
+        var W = window, VRC = W.VRC, oldL = VRC.screen.isL;
+
+        //// Determine screen dimensions as seen by the user. Note that Android
+        //// and iOS require different approaches.
+        VRC.screen.w = W.screen.width;
+        VRC.screen.h = W.screen.height;
+        if (VRC.isiOS) {
+          VRC.screen.isL = 90 === Math.abs(W.orientation);
+          if (VRC.screen.isL && VRC.screen.w < VRC.screen.h)
+            VRC.screen.w = [ VRC.screen.h, VRC.screen.h = VRC.screen.w ][0];
+        } else { // var-swap, above, from http://stackoverflow.com/a/16201730
+          VRC.screen.isL = VRC.screen.w > VRC.screen.h;
+        }
+
+        //// Add or remove 'body.vrc-screen-isl' and possibly trigger an
+        //// 'vrc-enter-screen-isl' or 'vrc-exit-screen-isl' event.
+        if (oldL !== VRC.screen.isL) {
+          if (VRC.screen.isL) {
+            $('body').addClass('vrc-screen-isl');
+            if (VRC.isReady) $(W).trigger('vrc-enter-screen-isl');
+          } else {
+            $('body').removeClass('vrc-screen-isl');
+            if (VRC.isReady) $(W).trigger('vrc-exit-screen-isl');
+          }
+        }
+      }
+
+      //// `updateWindowWH()` - updates window dimensions, even in Opera mobile.
+      //// Inspired by https://github.com/pyrsmk/W/blob/master/src/W.js
+     ,updateWindowWH: function () {
+        var W = window, VRC = W.VRC;
+    		var w = W.innerWidth,    h = W.innerHeight;
+    		if (!w || !h || w > VRC.screen.w || h > VRC.screen.h || w == 980)
+    			w = W.outerWidth,      h = W.outerHeight;
+    		if (!w || !h || w > VRC.screen.w || h > VRC.screen.h)
+    			w = screen.availWidth, h = screen.availHeight;
+        VRC.window.w = w; VRC.window.h = h;
+      }
+
+      //// `onEnter/ExitFullscreen()` - may be called by `onResize()`.
+     ,onEnterFullscreen: function () {
+        var W = window, VRC = W.VRC;
+        VRC.screen.isFS = true;
+        if (VRC.isReady) $(W).trigger('vrc-enter-fullscreen');
+      }
+     ,onExitFullscreen: function () {
+        var W = window, VRC = W.VRC;
+        VRC.screen.isFS = false;
+        if (VRC.isReady) $(W).trigger('vrc-exit-fullscreen');
+      }
+
+      ////
+     ,unhoverAllEntities: function () {
+        for (id in VRC.shapes) {
+          $('#' + id).attr('material', VRC.shapes[id][1]);
+        }
+        for (id in VRC.billboards) {
+          $('#' + id).attr('material',
+            'shader:html;target:'+VRC.billboards[id][1]+';transparent:true;fps:0;');
+        }
+        $('body').removeClass('vrc-cursor-hover');
+        VRC.currentHover = null;
+      }
+     ,hoverEntity: function (el) {
+        var meta;
+        if (VRC.shapes[el.id]) {
+          meta = VRC.shapes[el.id];
+          el.setAttribute('material', meta[2]);
+        } else if (VRC.billboards[el.id]) {
+          meta = VRC.billboards[el.id];
+          el.setAttribute('material',
+            'shader:html;target:'+meta[2]+';transparent:true;fps:0;');
+        }
+        if ('pointer' === meta[0]) {
+          $('body').addClass('vrc-cursor-hover');
+          VRC.currentHover = el.id;
+        }
+      }
+
+     ,refreshBillboard: function (billboard) {
+
+      }
+    };
+
+
+
+
+    //// UTILITY
+    var
+      has = function () {
+        for (var i=0; i<arguments.length; i++) {
+          if ( 0 < this.indexOf(arguments[i]) ) return true;
+        }
+      }
+    ;
+
+
+
+
+    //// INITIALIZE
+    jQuery(function ($) {
+
+      //// Basic setup and validation.
+      var W = window, $W = $(W), VRC = W.VRC, AFM = W.AFRAME;
+      if (! AFM) return console.error('VRC quit: `window.AFRAME` not found');
+
+      //// Determine whether the browser can handle VR.
+      VRC.hasNativeVR = W.hasNativeWebVRImplementation || AFM.utils.isMobile();
+
+      //// Determine the browser and OS.
+      var inUA = has.bind(W.navigator.userAgent);
+      if (inUA('OPiOS', ' OPR/'))          VRC.isOp  = true, VRC.ua = 'Op';
+      if (inUA('CriOS', 'Chrome'))         VRC.isCh  = true, VRC.ua = 'Ch';
+      if (inUA('Android'))                 VRC.isAnd = true, VRC.os = 'And';
+      if (inUA('iOS', 'iPh', 'iPo'))       VRC.isiOS = true, VRC.os = 'iOS';
+
+      //// When window dimensions change, update the '#vrc-above-the-fold' and
+      //// '#vrc-on-the-fold' <DIV>s and possibly trigger 'vrc-enter-fullscreen'
+      //// or 'vrc-exit-fullscreen' events.
+      $W.on('resize orientationchange', VRC.onResize);
+      VRC.onResize(); // set initial `VRC.screen/window` values, and detect f.s.
+
+      $W.on('scroll', VRC.onScroll);
+      VRC.onScroll(); // set initial camera height.
+
+      //// Some browsers need polling to keep track of window dimensions.
+      if (VRC.isOp && VRC.isiOS) W.setInterval(VRC.onResize, 100); // Op iOS fix
+      if (VRC.isOp && VRC.isAnd) W.setInterval(VRC.onResize, 100); // Op And fix
+      //@todo fix Opera Mini on Hudl
+      if (VRC.isCh && VRC.isiOS) W.setInterval( function () { // Ch iOS fix
+        var old = VRC.screen.isL;
+        VRC.updateScreenWH();
+        if (VRC.screen.isL != old) VRC.onResize();
+      }, 100);
+
+      //// Enable buttons for switching between view modes.
+      $('.vrc-enter-2d').click( function () { // old school!
+        $W.trigger('vrc-enter-2d'); } );
+      $('.vrc-enter-semi3d').click( function () { // 3D under a 2D layout
+        $W.trigger('vrc-enter-semi3d'); } );
+      $('.vrc-enter-fsvr').click( function () { // fullscreen VR
+        $W.trigger('vrc-enter-fsvr'); } );
+      $('.vrc-enter-fs3d').click( function () { // fullscreen 3D
+        $W.trigger('vrc-enter-fs3d'); } );
+
+      //// Enable navigation.
+      $('.vrc-previous').click( function () {
+        if (VRC.isAnimating) return;
+        VRC.unhoverAllEntities();
+        VRC.viewpoint--;
+        if (-1 === VRC.viewpoint) VRC.viewpoint = VRC.viewpoints.length - 1;
+        var vp = VRC.viewpoints[VRC.viewpoint];
+        if ('2d' === VRC.mode) { // 3D scene jumps immediately to the viewpoint
+          $('#camera')
+            .attr('position', vp.position).attr('rotation', vp.rotation);
+        } else {
+          VRC.isAnimating = true;
+          animate( $('#camera'), vp.position, vp.rotation, 500, VRC.onAnimateEnd);
+        }
+        $('.vrc-slide, .vrc-article, .vrc-dot').removeClass('vrc-active');
+        $(   '#vrc-slide-'   + VRC.viewpoint
+         + ', #vrc-article-' + VRC.viewpoint
+         + ', #vrc-dot-'     + VRC.viewpoint
+        ).addClass('vrc-active');
+      } );
+
+      $('.vrc-next').click( function () {
+        if (VRC.isAnimating) return;
+        VRC.unhoverAllEntities();
+        VRC.viewpoint++;
+        if (VRC.viewpoints.length === VRC.viewpoint) VRC.viewpoint = 0;
+        var vp = VRC.viewpoints[VRC.viewpoint];
+        if ('2d' === VRC.mode) { // 3D scene jumps immediately to the viewpoint
+          $('#camera')
+            .attr('position', vp.position).attr('rotation', vp.rotation);
+        } else {
+          VRC.isAnimating = true;
+          animate( $('#camera'), vp.position, vp.rotation, 500, VRC.onAnimateEnd);
+        }
+        $('.vrc-slide, .vrc-article, .vrc-dot').removeClass('vrc-active');
+        $(   '#vrc-slide-'   + VRC.viewpoint
+         + ', #vrc-article-' + VRC.viewpoint
+         + ', #vrc-dot-'     + VRC.viewpoint
+        ).addClass('vrc-active');
+      } );
+
+      $('.vrc-dot').click( function () {
+        if (VRC.isAnimating) return;
+        VRC.unhoverAllEntities();
+        VRC.viewpoint = +this.id.split('-').pop();
+        var vp = VRC.viewpoints[VRC.viewpoint];
+        if ('2d' === VRC.mode) { // 3D scene jumps immediately to the viewpoint
+          $('#camera')
+            .attr('position', vp.position).attr('rotation', vp.rotation);
+        } else {
+          VRC.isAnimating = true;
+          animate( $('#camera'), vp.position, vp.rotation, 500, VRC.onAnimateEnd);
+        }
+        $('.vrc-slide, .vrc-article, .vrc-dot').removeClass('vrc-active');
+        $(   '#vrc-slide-'   + VRC.viewpoint
+         + ', #vrc-article-' + VRC.viewpoint
+         + ', #vrc-dot-'     + VRC.viewpoint
+        ).addClass('vrc-active');
+      } );
+
+      //// Add initial classes to the <BODY> element.
+      $('body').addClass(
+           'vrc-semi3d' // not VR yet - a 3D scene under 2D text and UI
+        + ' vrc-' + (VRC.hasNativeVR ? 'has' : 'not') + '-native-vr'
+        + ' vrc-os-' + VRC.os.toLowerCase() // eg 'vrc-os-ios'
+        + ' vrc-ua-' + VRC.ua.toLowerCase() // eg 'vrc-os-ch'
+      );
+
+      //// Set up listeners which update `VRC.mode`.
+      $W.on('vrc-enter-2d'    , function () { VRC.mode = '2d';     });
+      $W.on('vrc-enter-semi3d', function () { VRC.mode = 'semi3d'; });
+      $W.on('vrc-enter-fs3d'  , function () { VRC.mode = 'fs3d';   });
+      $W.on('vrc-enter-fsvr'  , function () { VRC.mode = 'fsvr';   });
+
+      //// Set up listeners which update the <BODY> element’s class.
+      $W.on('vrc-enter-2d vrc-enter-semi3d vrc-enter-fsvr vrc-enter-fs3d',
+        function (event) {
+          $('body').removeClass('vrc-2d vrc-semi3d vrc-fsvr vrc-fs3d')
+                   .addClass( 'vrc' + event.type.substr(9) );
+        }
+      );
+      $W.on('vrc-exit-fullscreen',
+        function (event) {
+          if ('fs3d' === VRC.mode || 'fsvr' === VRC.mode)
+            $('body').removeClass('vrc-fsvr vrc-fs3d').addClass('vrc-semi3d');
+        });
+      $W.on('vrc-enter-fullscreen',
+        function (event) {
+          $('body').addClass('vrc-screen-isfs'); });
+
+      //// Handle exiting fullscreen.
+      $W.on('vrc-enter-2d vrc-enter-semi3d vrc-exit-fullscreen', function () {
+        $('#vrc-scene')[0].exitVR();
+        $('body').removeClass('vrc-screen-isfs vrc-cursor-hover');
+        $('#camera')
+          .attr('wasd-controls', 'enabled:true')
+          .attr('look-controls', 'enabled:true')
+        ;
+        $('#fuse')
+          .attr('visible', 'false')
+          .removeAttr('cursor raycaster')
+        ;
+        VRC.unhoverAllEntities(); // eg, user hits [ESC] when an entity is hovered
+        var exitFs =
+            document.exitFullscreen
+         || document.mozCancelFullScreen
+         || document.webkitExitFullscreen
+         || document.msExitFullscreen;
+        if (exitFs) exitFs.call(document);
+        $('.vrc-visible-fs3d, .vrc-visible-fsvr').attr('visible', 'false');
+      });
+
+      //// Handle entering fullscreen.
+      $W.on('vrc-enter-fsvr vrc-enter-fs3d', function () {
+        $('#vrc-scene')[0].enterVR();
+        // $('body').addClass('vrc-screen-isfs');
+        $('#camera')
+          .attr('wasd-controls', 'enabled:true')
+          .attr('look-controls', 'enabled:true')
+        ;
+        if (VRC.isiOS || VRC.isAnd) { //!!!!
+          $('#fuse')
+            .attr('visible', 'true')
+            .attr('cursor', 'fuse:true; fuseTimeout:0')
+          ;
+        }
+        setTimeout( function () {
+          $('.vrc-visible-fs3d, .vrc-visible-fsvr').attr('visible', 'true');
+        }, 500);
+      });
+
+      //// Handle hover events on A-Frame entities.
+      $W.on('vrc-shape-mouseenter', function (event, el) {
+        if (! el) return;
+        VRC.unhoverAllEntities(); // remove hover-state from all entities
+        if (! el.id) return; // ignore the entity if it has no `id` attribute
+        VRC.hoverEntity(el); // add hover-state to the entity
+      });
+      $W.on('vrc-shape-mouseleave', function (event, el) {
+        if (! el) return;
+        VRC.unhoverAllEntities(); // remove hover-state from all entities
+        if (! el.id) return; // ignore the entity if it has no `id` attribute
+      });
+
+      //// Handle click events on the A-Frame canvas.
+      // w80a('VOOP!');
+      // if (VRC.isiOS || VRC.isAnd) {
+        $W.on('touchstart', function (event) {
+          if ('fsvr' !== VRC.mode) return;
+          // w80a(123123);
+          if (! VRC.currentHover) return; // nothing currently hovered
+          if ('vrc-plane' === VRC.currentHover) {
+            $W.trigger('vrc-enter-semi3d');
+          } else {
+            $( '#vrc-dot-' + VRC.currentHover.split('-').pop() ).click();
+          }
+        });
+      // };
+
+      //// Scroll up to the top of the window when it loads or reloads.
+      //// This simplifies detection of fullscreen-mode on mobile devices.
+      VRC.isAnimating = true;
+      $('html,body')
+        .animate({ scrollTop:0 }, VRC.anim.fast, 'swing', VRC.onAnimateEnd);
+
+      if (! VRC.isiOS) { //!!!!
+        // VRC.shapes['vrc-plane'][2] = 'shader:html;target:#here-active;transparent:true;fps:0;';
+      }
+
+    }); // end on-load
+
+
+
+    // $(window).on('vrc-enter-fullscreen', function () { alert('enter FS!'); });
+    // $(window).on('vrc-exit-fullscreen', function ()  { alert('EXIT FS!'); });
+    // $(window).on('vrc-enter-screen-isl', function () { alert('enter L!'); });
+    // $(window).on('vrc-exit-screen-isl', function ()  { alert('EXIT L!'); });
+
+//// http://stackoverflow.com/a/17361309
+////@todo write an A-Frame component instead, which uses A-Frame’s anim-loop
+function animate($el, position, rotation, speed, cb) {
+
+    // duration in ms
+    speed = speed || 2000;
+
+    var p = $el.attr('position'),
+        r = $el.attr('rotation'),
+        start = { // initial state of attributes
+          px: p.x
+         ,py: p.y
+         ,pz: p.z
+         ,rx: r.x
+         ,ry: r.y
+         ,rz: r.z
+        },
+        p = position.split(' '),
+        r = rotation.split(' '),
+        end = { // final state of attributes
+          px: +p[0]
+         ,py: +p[1] - VRC.cameraTravel
+         ,pz: +p[2]
+         ,rx: +r[0]
+         ,ry: +r[1]
+         ,rz: +r[2]
+        },
+        diff = {
+          px: end.px - start.px
+         ,py: end.py - start.py
+         ,pz: end.pz - start.pz
+         ,rx: end.rx - start.rx
+         ,ry: end.ry - start.ry
+         ,rz: end.rz - start.rz
+        },
+        timeout = 20, // interval between rendering loop in ms
+        steps = Math.floor(speed/timeout), // number of cycles required
+        cycles = steps, // counter for cycles left
+        step = {
+          px: diff.px / steps
+         ,py: diff.py / steps
+         ,pz: diff.pz / steps
+         ,rx: diff.rx / steps
+         ,ry: diff.ry / steps
+         ,rz: diff.rz / steps
+        }
+    ;
+    (function loop() {
+        $el
+          .attr('position',
+              ( end.px - (step.px * cycles) ) + ' '
+            + ( end.py - (step.py * cycles) ) + ' '
+            + ( end.pz - (step.pz * cycles) )
+          )
+          .attr('rotation',
+              ( end.rx - (step.rx * cycles) ) + ' '
+            + ( end.ry - (step.ry * cycles) ) + ' '
+            + ( end.rz - (step.rz * cycles) )
+          )
+        ;
+
+        if (--cycles) { // call the loop if counter is not exhausted
+          setTimeout(loop, timeout);
+        } else {
+          // $el.attr('position', position).attr('rotation', rotation);
+          if (cb) { cb(); }
+        }
+
+    })(); // start the loop
+}
+
+  </script>
+
+</body>
+</html>

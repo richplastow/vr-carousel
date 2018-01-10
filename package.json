@@ -1,0 +1,23 @@
+{
+  "name": "vr-carousel",
+  "version": "0.0.1",
+  "description": "VR-Carousel",
+  "main": "js/vrc.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "make": "node make.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MakemediaLtd/VR-Carousel.git"
+  },
+  "author": "Rich Plastow <rich@richplastow.com> (http://richplastow.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MakemediaLtd/VR-Carousel/issues"
+  },
+  "homepage": "https://github.com/MakemediaLtd/VR-Carousel#readme",
+  "devDependencies": {
+    "uglify-js": "^2.7.5"
+  }
+}

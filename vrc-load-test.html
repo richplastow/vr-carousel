@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Make Real VR Carousel</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi">
+
+  <!-- `w80a("alert this text!")` -->
+  <script>!function(c){var d=document,v=navigator.userAgent,A='addEventListener'
+  ,t=0,w=this,e=function(m,u,n){m===m+''?0:(n=m.lineno,u=m.filename,m=m.message)
+  c.w80a((u+':'+n).match(/[^\/]+?\/?[^\/]+$/)[0]+'\n'+m)};w.w80a=c.w80a=c.w80a||
+  function(o){o=++t+' '+o;c.w80f?c.w80f():0;!d.body?alert(o):(p=d.createElement(
+  'P'),d.body.appendChild(p),p.innerHTML='<pre style="position:fixed;z-index:9;\
+  top:40%;left:1em;right:1em;border:1em solid #600;background:#811;color:#ccc;"\
+  onclick="body.removeChild(this.parentNode)">'+o+'</pre>')}//@todo x-ua style
+  if(/efox\/(\d|[1-2]\d)\.|Presto|n\/4\.0 Saf/.test(v)){w.onerror=e}else{w[A]&&!
+  /MSIE 9/.test(v)?w[A]('error',e,0):w.attachEvent('onerror',e)}}(top)</script>
+
+  <script>
+    VRC = {
+      ua: { ie: true }
+     ,V:  6
+     ,config: { load: { jQueryLegacy:'leg', jQueryModern:'mod' } }
+    }
+  </script>
+
+  <script>
+    /* ---------------------------------------------------------------------- */
+    /* js/vrc-config.js                                                       */
+    /* Configuration for all VRC functions. [@todo describe]                  */
+    /* ---------------------------------------------------------------------- */
+    !function () { 'use strict'
+/*
+      ;(window.VRC = window.VRC || {}).config = {
+
+        //// SNIFF
+        sniff: { // Configuration for 'js/vrc-sniff.js'
+          showAtStartup: true  // show the sniff message when the page loads
+         ,toggleKey:     'S'   // [SHIFT+s] to show/hide; use `null` to disable
+        }
+
+        //// LOAD
+       ,load: { // Configuration for 'js/vrc-load.js'
+          jQueryLegacy: 'js/jquery-1.12.4.min.js'     // primarily IE6-8
+         ,jQueryModern: 'js/jquery-3.1.1.slim.min.js' // iOS 7+, Android 4+
+        }
+
+        //// PANEL
+       ,panel: { // Configuration for 'js/vrc-panel.js'
+          showAtStartup: true  // show the panel when the page loads
+         ,toggleKey:     'p'   // press 'p' to show/hide; use `null` to disable
+        }
+
+      }
+*/
+    }()
+  </script>
+
+
+  <script>!function () { 'use strict'; var FILE = 'js/vrc-load.js'
+  /* ------------------------------------------------------------------------ */
+  /* Preloads VRC assets and dependencies. [@todo describe]                   */
+  /* ------------------------------------------------------------------------ */
+
+
+  //// SETUP
+  var VRC = (window.VRC = window.VRC || {})
+     ,fail = function (msg) { (w80a || alert)(FILE + '\n  ' + msg) }
+
+
+  //// VALIDATION
+  if (! VRC.ua) return fail('Need to know the browser, but VRC.ua is unset')
+  if (null == VRC.V) return fail('Need the browser version, but VRC.V is unset')
+  if (! VRC.config || ! VRC.config.load) return fail('VRC.config.load is unset')
+
+
+  //// JQUERY
+  if (! window.jQuery) { // accept preexisting jQuery
+
+    //// Choose appropriate jQuery src.
+    var jqSrc = VRC.config.load.jQueryModern
+    if (VRC.ua.ie && 9 > VRC.V) jqSrc = VRC.config.load.jQueryLegacy
+
+    //// Load jQuery.
+    var jq = document.createElement('script');
+    jq.src = jqSrc;
+    jq.innerHTML = '<!-- Loaded by ' + FILE + ' -->';
+    jq.onerror = function () { alert('error!!'); }
+    jq.onload = function () { alert('loaded!'); }
+    document.head.appendChild(jq);
+
+  }
+
+  // if (! VRC.config.load.jQueryLegacy) return fail('No VRC.config.load')
+
+
+
+
+  }()</script>
+
+
+  <script>!function () { 'use strict'
+  /* ------------------------------------------------------------------------ */
+  /* js/vrc-panel.js                                                          */
+  /* A popup for info, notifications and controlling VRC. [@todo describe]    */
+  /* ------------------------------------------------------------------------ */
+
+
+  //// SETUP
+  var VRC = (window.VRC = window.VRC || {})
+  VRC.config = VRC.config || {}; VRC.config.panel = VRC.config.panel || {}
+
+
+  }()</script>
+
+
+</head>
+<body>
+
+  <h1>Testing js/vrc-load.js on its own</h1>
+
+
+</body>
+</html>

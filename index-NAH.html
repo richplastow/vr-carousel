@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Make Real VR Carousel</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi">
+
+  <!-- `w80a("alert this text!")` -->
+  <script>!function(c){var d=document,v=navigator.userAgent,A='addEventListener'
+  ,p,t=0,w=this,e=function(m,u,n){m===m+''?0:(n=m.lineno,u=m.filename,m=m.message) // squeeze `,p` in!
+  c.w80a((u+':'+n).match(/[^\/]+?\/?[^\/]+$/)[0]+'\n'+m)};w.w80a=c.w80a=c.w80a||
+  function(o){o=++t+' '+o;c.w80f?c.w80f():0;!d.body?alert(o):(p=d.createElement(
+  'P'),p.style.position='absolute',p.style.zIndex=9999,d.body.appendChild(p),p.innerHTML='<tt style="position:fixed;\
+  top:40%;left:1em;right:1em;border:1em solid #600;background:#811;color:#ccc;"\
+  onclick="body.removeChild(this.parentNode)">'+o+'</tt>')}//@todo x-ua style
+  if(/efox\/(\d|[1-2]\d)\.|Presto|n\/4\.0 Saf/.test(v)){w.onerror=e}else{w[A]&&!
+  /MSIE 9/.test(v)?w[A]('error',e,0):w.attachEvent('onerror',e)}}(top)</script>
+
+  <!-- Load styles (fonts must go first) -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:400,300">
+  <link rel="stylesheet" type="text/css" href="css/vrc-style.css">
+
+  <!-- Load the bundled minified VRC - good for production... -->
+  <!-- <script src="js/vrc.min.js"></script> -->
+
+  <!-- ...or load the bundled VRC - good for development of your carousel... -->
+  <!-- <script src="js/vrc.js"></script> -->
+
+  <!-- ...or load each VRC source file individually - good for debugging VRC -->
+  <script src="js/vrc-boot.js"></script>
+
+</head>
+<body>
+
+  <div id="vrc-scene-wrap-overlay"></div>
+  <a id="vrc-previous" href="#">&lt;</a>
+  <a id="vrc-next" href="#">&gt;</a>
+
+  <div id="vrc-wrap"><!-- table -->
+    <div><!-- tr -->
+      <div>&nbsp;</div><!-- td -->
+      <div id="vrc-main"><!-- td -->
+        <div><!-- table -->
+
+          <div id="vrc-header"><!-- tr -->
+            <div><!-- td -->
+              <div class="vrc-render"
+                   data-vrc-render="img/header-logo.png">
+                <noscript><img src="img/header-logo.png"></noscript>
+              </div>
+            </div><!-- td -->
+          </div><!-- tr -->
+
+          <div class="vrc-section" id="construction-simulator"
+               data-vrc-dae="dae/construction-simulator.dae"
+               data-vrc-texture="dae/duck-cm.png"
+               data-vrc-color="#F9E202"><!-- tr -->
+            <div><!-- td -->
+              <div class="vrc-render"
+                   data-vrc-render="img/render/construction-simulator.jpg">
+                <noscript><img src="img/render/construction-simulator.jpg"></noscript>
+                <h1>Construction Simulator</h1>
+                <p>After the successful installation of the ‘ACT-UK’ (now known as
+                ACUA) at Coventry University, the ‘Building Leadership Simulation
+                Centre’ (BLSC) in Melbourne, Australia contacted us to look at
+                creating a similar installation at their new training center.
+                </p>
+                <p>The construction site manager training simulator provides a
+                mixed reality environment to learn about technical, personnel and
+                procedure handling in a safe, controlled manner. The mixed reality
+                consists of:
+                </p>
+                <ul>
+                  <li>3D “time slice” interactive environments</li>
+                  <li>Real-world actors (trained construction site operatives)</li>
+                  <li>Key training scenarios presented between screen and actors</li>
+                </ul>
+                <hr>
+              </div>
+            </div><!-- td -->
+          </div><!-- tr -->
+
+          <div class="vrc-section" id="rs-racer"
+               data-vrc-dae="dae/rs-racer.dae"
+               data-vrc-color="#F77465"><!-- tr -->
+            <div><!-- td -->
+              <div class="vrc-render"
+                   data-vrc-render="img/render/rs-racer.jpg">
+                <noscript><img src="img/render/rs-racer.jpg"></noscript><!-- for bots -->
+                <h1>RS Racer</h1>
+                <p>RS Components are a long-term customer of our parent company Makemedia.
+                We were asked to create a fun, engaging experience to attract attendees at
+                the Electronica Productronica event in Shanghai.
+                </p>
+                <h4>Unique Challenges</h4>
+                <p>RS needed a concept that would make their booth stand out from the
+                competition. It was their first time at an event in this region, having
+                recently opened a new local distribution centre.
+                </p>
+                <p>We were able to quickly understand RS’s focus, and overall business
+                aims and goals; this meant we were able to leverage the budget effectively
+                and meet tight deadlines.
+                </p>
+                <hr>
+              </div>
+            </div><!-- td -->
+          </div><!-- tr -->
+
+          <div class="vrc-section" id="procat-virtual-learning-zone"
+               data-vrc-dae="dae/procat-virtual-learning-zone.dae"
+               data-vrc-texture="dae/engine-color.png"
+               data-vrc-color="#111111"><!-- tr -->
+            <div><!-- td -->
+              <div class="vrc-render"
+                   data-vrc-render="img/render/procat-virtual-learning-zone.jpg">
+                <noscript><img src="img/render/procat-virtual-learning-zone.jpg"></noscript>
+                <h1>PROCAT Virtual Learning Zone</h1>
+                <p>Prospects College of Advanced Technology provides a unique
+                partnership with the engineering and construction industries to
+                train the next generation of skilled technicians. Nostrud
+                exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                consequat. Duis aute irure dolor in reprehenderit in voluptate
+                velit esse cillum dolore eu fugiat nulla pariatur. Excepteur
+                occaecat cupidatat non proident, sunt in culpa qui officia
+                mollit anim id est laborum.
+                </p>
+                <h4>A Tailored Solution</h4>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+                veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+                ex ea commodo consequat.
+                </p>
+                <hr>
+              </div>
+            </div><!-- td -->
+          </div><!-- tr -->
+
+          <div class="vrc-section" id="top-of-the-crop"
+               data-vrc-dae="dae/top-of-the-crop.dae"
+               data-vrc-color="#241FFF"><!-- tr -->
+            <div><!-- td -->
+              <div class="vrc-render"
+                   data-vrc-render="img/render/top-of-the-crop.jpg">
+                <noscript><img src="img/render/top-of-the-crop.jpg"></noscript>
+                <h1>Top of the Crop</h1>
+                <p>McDonalds asked us to create a virtual reality and immersive
+                video experience, to take visitors this summer to country shows
+                and right into the heart of its supplier farms. Its mobile
+                roadshow, “Follow our Footsteps”, kicked off at the Balmoral Show,
+                Northern Island in May 2016, and toured agricultural shows until
+                the end of the year.
+                </p>
+                <h4>Unique Challenges</h4>
+                <p>In “Top of the Crop”, users wearing an Oculus VR headset are
+                invited to test their skill behind the wheel of a tractor during a
+                potato harvest. They are judged on speed, accuracy and the quality
+                of the successfully harvested crop.
+                </p>
+                <hr>
+              </div>
+            </div><!-- td -->
+          </div><!-- tr -->
+
+          <div class="vrc-section" id="reactor-builder"
+               data-vrc-dae="dae/reactor-builder.dae"
+               data-vrc-color="#48B3FF"><!-- tr -->
+            <div><!-- td -->
+              <div class="vrc-render"
+                   data-vrc-render="img/render/reactor-builder.jpg">
+                <noscript><img src="img/render/reactor-builder.jpg"></noscript>
+                <h1>Reactor Builder</h1>
+                <p>Virtual Reality (VR), enables learners to build their own nuclear power
+                reactor primary circuit using the knowledge gained throughout the day.
+                </p>
+                <p>Utilising HTC Vive headsets and the two motion controllers, learners
+                use virtual hands within the virtual scene to pick up and inspect each
+                component piece of the primary circuit, such as the reactor core, steam
+                generator and pressuriser, before connecting them together to form the
+                complete circuit.
+                </p>
+                <h4>The key learning features:</h4>
+                <ul>
+                  <li>Time-based challenge to complete the circuit correctly against the
+                  clock, awarding levels of medals based upon performance</li>
+                  <li>Difficulty curve starting with a simple, representational circuit
+                  with schematics available to a full, real-world circuit with multiple
+                  loops without the schematics for reference</li>
+                  <li>Simple, recognisable building block premise based on popular
+                  childrens’ toys and “Krypton Factor” mind-bending puzzles</li>
+                </ul>
+                <hr>
+              </div>
+            </div><!-- td -->
+          </div><!-- tr -->
+
+        </div><!-- table -->
+      </div><!-- td (#vrc-main) -->
+      <div>&nbsp;</div><!-- td -->
+    </div><!-- tr -->
+  </div><!-- table (#vrc-wrap) -->
+
+</body>
+</html>
